@@ -11,4 +11,7 @@ typedef struct data_s {
     int * token;
 } data_t;
 
+
+void initStruct(data_t *data);
+
 #endif  // SRC_DOOROPENER_H_"

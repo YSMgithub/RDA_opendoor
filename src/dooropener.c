@@ -4,7 +4,14 @@
 #include <string.h>
 #include "dooropener.h"
 
-void init_struct(data_t *data) {
+int main() {
+    data_t data;
+    initStruct(&data);
+    return 0;
+}
+
+
+void initStruct(data_t *data) {
   data->rdaID = malloc(MAX_NAME_LENGTHS);
   data->user = malloc(MAX_NAME_LENGTHS);
   data->password = malloc(MAX_NAME_LENGTHS);
@@ -20,7 +27,3 @@ void init_struct(data_t *data) {
 
 }
 
-int main() {
-    data_t data;
-    return 0;
-}
