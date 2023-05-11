@@ -14,4 +14,6 @@ typedef struct data_s {
 
 void initStruct(data_t *data);
 
+void dataReader(data_t *data);
+
 #endif  // SRC_DOOROPENER_H_"
