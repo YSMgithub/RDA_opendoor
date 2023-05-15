@@ -4,14 +4,36 @@
 #include <string.h>
 #include "dooropener.h"
 
-int main() {
+int main(int argc, char *argv[]) {
     data_t data_s;
     initStruct(&data_s);
-    dataReader(&data_s);
+    if (argc > 0) {
+      for (int i = 1; i < argc; i++) {
+      if (strcmp(argv[i], "-u") == 0) {
+          // Аргумент -u содержит имя пользователя
+          i++;
+          strcpy(data_s.user, argv[i]);
+      } else if (strcmp(argv[i], "-p") == 0) {
+          // Аргумент -p содержит пароль
+          i++;
+          strcpy(data_s.password, argv[i]);
+      } else if (strcmp(argv[i], "-i") == 0) {
+          // Аргумент -i содержит ID (целое число)
+          i++;
+          strcpy(data_s.rdaID, argv[i]);
+      }
+    }
+  } 
+    //dataReader(&data_s);
+    //readFromFile (&data_s);
+    printf("\n token = %s\n", data_s.token);
+    printf("\n user = %s\n", data_s.user);
+    printf("\n password = %s\n", data_s.password);
     gettokenfunc(&data_s);
+    //writeToFile(&data_s);
     sendPostFunc(&data_s);
-    //printf("\n%s\n", data_s.user);
-    printf("\n bebebe = %s\n", data_s.token);
+
+    
     return 0;
 }
 
@@ -46,7 +68,7 @@ void dataReader(data_t *data_s) {
 }
 
 int gettokenfunc(data_t *data_s) {
- 
+
 CURL *curl;
 CURLcode res;
 curl = curl_easy_init();
@@ -110,4 +132,37 @@ void sendPostFunc (data_t *data_s) {
         curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data);
         res = curl_easy_perform(curl);
     curl_easy_cleanup(curl);
+}
+
+int writeToFile (data_t *data_s) {
+  FILE *f = fopen("config.txt", "w");
+    if (f == NULL) {
+        printf("Failed to open file for writing.\n");
+        return 1;
+    }
+
+    fprintf(f, "%s\n", data_s->token);
+    fprintf(f, "%s\n", data_s->user);
+    fprintf(f, "%s\n", data_s->password);
+    fprintf(f, "%s\n", data_s->rdaID);
+    fclose(f);
+  
+  return 0;
+}
+
+void readFromFile (data_t *data_s) {
+    FILE *file;
+    char line[MAX_TOKEN_LENGTHS];
+    file = fopen("config.txt", "r");
+    if (file == NULL) {
+        printf("Ошибка открытия файла!");
+        exit(1);
+    }
+
+    fgets(data_s->token, MAX_TOKEN_LENGTHS, file);
+    fgets(data_s->user, MAX_NAME_LENGTHS, file);
+    fgets(data_s->password, MAX_NAME_LENGTHS, file);
+    fgets(data_s->rdaID, MAX_NAME_LENGTHS, file);
+    // закрыть файл
+    fclose(file);
 }

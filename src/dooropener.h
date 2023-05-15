@@ -9,8 +9,13 @@ typedef struct data_s {
     char * user;
     char * password;
     char * token;
-    char * ptr;
+    flags_t flags;
 } data_t;
+
+
+typedef struct flags_s {
+    int flag;
+} flags_t;
 
 
 void initStruct(data_t * data_s);
@@ -22,5 +27,9 @@ int gettokenfunc(data_t * data_s);
 size_t writefunc(void *ptr, size_t size, size_t nmemb, data_t *data_s);
 
 void sendPostFunc (data_t *data_s);
+
+int writeToFile (data_t *data_s);
+
+void readFromFile (data_t *data_s);
 
 #endif  // SRC_DOOROPENER_H_"
