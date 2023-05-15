@@ -7,23 +7,7 @@
 int main(int argc, char *argv[]) {
     data_t data_s;
     initStruct(&data_s);
-    if (argc > 0) {
-      for (int i = 1; i < argc; i++) {
-      if (strcmp(argv[i], "-u") == 0) {
-          // Аргумент -u содержит имя пользователя
-          i++;
-          strcpy(data_s.user, argv[i]);
-      } else if (strcmp(argv[i], "-p") == 0) {
-          // Аргумент -p содержит пароль
-          i++;
-          strcpy(data_s.password, argv[i]);
-      } else if (strcmp(argv[i], "-i") == 0) {
-          // Аргумент -i содержит ID (целое число)
-          i++;
-          strcpy(data_s.rdaID, argv[i]);
-      }
-    }
-  } 
+    int getArgs (argc, argv, &data_s);
     //dataReader(&data_s);
     //readFromFile (&data_s);
     printf("\n token = %s\n", data_s.token);
@@ -37,6 +21,30 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
+
+int getArgs (int argc, char *argv[], data_t * data_s) {
+  if (argc > 0) {
+      for (int i = 1; i < argc; i++) {
+      if (strcmp(argv[i], "-u") == 0) {
+          // Аргумент -u содержит имя пользователя
+          i++;
+          strcpy(data_s->user, argv[i]);
+      } else if (strcmp(argv[i], "-p") == 0) {
+          // Аргумент -p содержит пароль
+          i++;
+          strcpy(data_s->password, argv[i]);
+      } else if (strcmp(argv[i], "-i") == 0) {
+          // Аргумент -i содержит ID (целое число)
+          i++;
+          strcpy(data_s->rdaID, argv[i]);
+      } else {
+        printf("Not valid args");
+        return 1;
+      }
+    }
+  }
+  return 0;
+}
 
 void initStruct(data_t *data_s) {
   data_s->rdaID = malloc(MAX_NAME_LENGTHS);

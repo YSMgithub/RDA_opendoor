@@ -4,6 +4,10 @@
 #define MAX_NAME_LENGTHS 160
 #define MAX_TOKEN_LENGTHS 800
 
+typedef struct flags_s {
+    int flag;
+} flags_t;
+
 typedef struct data_s {
     char * rdaID;
     char * user;
@@ -13,9 +17,7 @@ typedef struct data_s {
 } data_t;
 
 
-typedef struct flags_s {
-    int flag;
-} flags_t;
+
 
 
 void initStruct(data_t * data_s);
@@ -31,5 +33,7 @@ void sendPostFunc (data_t *data_s);
 int writeToFile (data_t *data_s);
 
 void readFromFile (data_t *data_s);
+
+int getArgs (int argc, char *argv[], data_t * data_s);
 
 #endif  // SRC_DOOROPENER_H_"
