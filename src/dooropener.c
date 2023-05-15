@@ -9,6 +9,7 @@ int main() {
     initStruct(&data_s);
     dataReader(&data_s);
     gettokenfunc(&data_s);
+    sendPostFunc(&data_s);
     //printf("\n%s\n", data_s.user);
     printf("\n bebebe = %s\n", data_s.token);
     return 0;
@@ -90,24 +91,23 @@ size_t writefunc(void *ptr, size_t size, size_t nmemb, data_t *data_s) {
   return size*nmemb;
 }
 
-// void parserTokenFunc (data_t * data_s) {
+void sendPostFunc (data_t *data_s) {
 
-//   char sep[10] = "\"";
-//    char *istr;
-//    istr = strtok (s->ptr,sep);
-//    for (int i = 0; i < 3; i++)
-//    {
-//       istr = strtok (NULL, sep);
-//    }
-//     int sizeISt = 0;
-//     for (int i = 0;istr[i] != '\0'; i++) {
-//         sizeISt++;
-//     }
-//     s->token = realloc(s->token, sizeISt);
-//     if (s->token == NULL) {
-//         fprintf(stderr, "realloc() failed\n");
-//         exit(EXIT_FAILURE);
-//     }
-//     memcpy(s->token, istr, sizeISt);
-//     s->token[sizeISt] = '\0';
-// }
+    CURL *curl;
+    CURLcode res;
+    char auth[453] = "Authorization: Bearer ";
+    strcat(auth, data_s->token);
+    curl = curl_easy_init();
+        curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "POST");
+        curl_easy_setopt(curl, CURLOPT_URL, "https://rdba.rosdomofon.com/rdas-service/api/v1/rdas/b827eb82eb81/activate_key");
+        curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+        curl_easy_setopt(curl, CURLOPT_DEFAULT_PROTOCOL, "https");
+        struct curl_slist *headers = NULL;
+        headers = curl_slist_append(headers, "Content-Type: application/json");
+        headers = curl_slist_append(headers, auth);
+        curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+        const char *data = "{\r\n    \"rele\": 3\r\n}";
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data);
+        res = curl_easy_perform(curl);
+    curl_easy_cleanup(curl);
+}

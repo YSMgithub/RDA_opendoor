@@ -8,7 +8,7 @@ typedef struct data_s {
     char * rdaID;
     char * user;
     char * password;
-    int * token;
+    char * token;
     char * ptr;
 } data_t;
 
@@ -20,5 +20,7 @@ void dataReader(data_t * data_s);
 int gettokenfunc(data_t * data_s);
 
 size_t writefunc(void *ptr, size_t size, size_t nmemb, data_t *data_s);
+
+void sendPostFunc (data_t *data_s);
 
 #endif  // SRC_DOOROPENER_H_"
