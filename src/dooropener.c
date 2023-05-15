@@ -7,7 +7,7 @@
 int main() {
     data_t data_s;
     initStruct(&data_s);
-    //dataReader(&data_s);
+    dataReader(&data_s);
     gettokenfunc(&data_s);
     //printf("\n%s\n", data_s.user);
     printf("\n bebebe = %s\n", data_s.token);
@@ -50,11 +50,10 @@ CURL *curl;
 CURLcode res;
 curl = curl_easy_init();
 if(curl) {
-  // char data[512] = "grant_type=password&client_id=machine&username=";
-  // memcpy(data, data_s->user, strlen(data_s->user));
-
-  char data[512] = "grant_type=password&client_id=machine&username=p.kuharenok&password=YswE571$";
-
+  char data[512] = "grant_type=password&client_id=machine&username=";
+  strcat(data, data_s->user);
+  strcat(data, "&password=");
+  strcat(data, data_s->password);
   curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "POST");
   curl_easy_setopt(curl, CURLOPT_URL, "https://rdba.rosdomofon.com/authserver-service/oauth/token");
   curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
@@ -74,17 +73,26 @@ curl_easy_cleanup(curl);
 }
 
 size_t writefunc(void *ptr, size_t size, size_t nmemb, data_t *data_s) {
-  memcpy(data_s->token, ptr, size*nmemb);
+  char sep[10] = "\"";
+   char *istr;
+   istr = strtok (ptr,sep);
+   for (int i = 0; i < 3; i++)
+   {
+      istr = strtok (NULL, sep);
+   }
+    int sizeISt = 0;
+    for (int i = 0;istr[i] != '\0'; i++) {
+        sizeISt++;
+    }
+
+
+  memcpy(data_s->token, istr, strlen(istr));
   return size*nmemb;
 }
 
-int parseToken(data_t *data_s) {
-  return 0;
-}
+// void parserTokenFunc (data_t * data_s) {
 
-// void parserTokenFunc (struct string *s) {
-
-//     char sep[10] = "\"";
+//   char sep[10] = "\"";
 //    char *istr;
 //    istr = strtok (s->ptr,sep);
 //    for (int i = 0; i < 3; i++)

@@ -13,11 +13,11 @@ typedef struct data_s {
 } data_t;
 
 
-void initStruct(data_t *data);
+void initStruct(data_t * data_s);
 
-void dataReader(data_t *data);
+void dataReader(data_t * data_s);
 
-int gettokenfunc(data_t *data_s);
+int gettokenfunc(data_t * data_s);
 
 size_t writefunc(void *ptr, size_t size, size_t nmemb, data_t *data_s);
 
