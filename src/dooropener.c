@@ -7,7 +7,9 @@
 int main(int argc, char *argv[]) {
     data_t data_s;
     initStruct(&data_s);
-    int getArgs (argc, argv, &data_s);
+    getArgs (argc, argv, &data_s);
+    writeToFile(&data_s);
+    readFromFile (&data_s);
     //dataReader(&data_s);
     //readFromFile (&data_s);
     printf("\n token = %s\n", data_s.token);
@@ -22,7 +24,7 @@ int main(int argc, char *argv[]) {
 }
 
 
-int getArgs (int argc, char *argv[], data_t * data_s) {
+int getArgs (int argc, char *argv[], data_t *data_s) {
   if (argc > 0) {
       for (int i = 1; i < argc; i++) {
       if (strcmp(argv[i], "-u") == 0) {
@@ -143,16 +145,34 @@ void sendPostFunc (data_t *data_s) {
 }
 
 int writeToFile (data_t *data_s) {
-  FILE *f = fopen("config.txt", "w");
-    if (f == NULL) {
-        printf("Failed to open file for writing.\n");
-        return 1;
+  FILE *f = fopen("config.txt", "r+");
+  if (f == NULL) {
+      printf("Failed to open file for writing.\n");
+      return 1;
+  }
+  char buffer[MAX_TOKEN_LENGTHS];
+  char key[100];
+  char value[MAX_TOKEN_LENGTHS];
+    while (fgets(buffer, MAX_TOKEN_LENGTHS, f) != NULL) {
+        // Извлекаем ключ и значение из строки
+        sscanf(buffer, "%[^=]=%s", key, value);
+        printf("\nkey = %s, value = %s\n", key, value);
+        // Сравниваем ключ со значениями token, user, password и id и записываем новые значения из структуры
+        if (strcmp(key, "token") == 0) {
+            strcpy(data_s->token, value);
+            fprintf(f, "token=%s\n", data_s->token);
+        } else if (strcmp(key, "user") == 0) {
+            strcpy(data_s->user, value);
+            fprintf(f, "user=%s\n", data_s->user);
+        } else if (strcmp(key, "password") == 0) {
+            strcpy(data_s->password, value);
+            fprintf(f, "password=%s\n", data_s->password);
+        } else if (strcmp(key, "id") == 0) {
+            strcpy(data_s->rdaID, value);
+            fprintf(f, "id=%s\n", data_s->rdaID);
+        }
     }
 
-    fprintf(f, "%s\n", data_s->token);
-    fprintf(f, "%s\n", data_s->user);
-    fprintf(f, "%s\n", data_s->password);
-    fprintf(f, "%s\n", data_s->rdaID);
     fclose(f);
   
   return 0;

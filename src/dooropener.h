@@ -34,6 +34,6 @@ int writeToFile (data_t *data_s);
 
 void readFromFile (data_t *data_s);
 
-int getArgs (int argc, char *argv[], data_t * data_s);
+int getArgs (int argc, char *argv[], data_t *data_s);
 
 #endif  // SRC_DOOROPENER_H_"
