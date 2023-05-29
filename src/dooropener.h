@@ -37,4 +37,4 @@ int getArgs(int argc, char *argv[], data_t *data_s);
 
 void memFree(data_t *data_s);
 
-#endif  // SRC_DOOROPENER_H_"
+#endif  // SRC_DOOROPENER_H_
