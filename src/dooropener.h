@@ -4,15 +4,13 @@
 #define MAX_NAME_LENGTHS 160
 #define MAX_TOKEN_LENGTHS 800
 
-typedef struct flags_s
-{
+typedef struct flags_s {
     int dataChgFlg;
     int doorOpen;
     int getOrPost;
 } flags_t;
 
-typedef struct data_s
-{
+typedef struct data_s {
     char *rdaID;
     char *user;
     char *password;
@@ -39,4 +37,4 @@ int getArgs(int argc, char *argv[], data_t *data_s);
 
 void memFree(data_t *data_s);
 
-#endif // SRC_DOOROPENER_H_"
+#endif  // SRC_DOOROPENER_H_"
