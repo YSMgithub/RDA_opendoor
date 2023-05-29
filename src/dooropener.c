@@ -115,15 +115,17 @@ int gettokenfunc(data_t *data_s) {
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, data_s);
 
         res = curl_easy_perform(curl);
-    }
-    curl_easy_cleanup(curl);
-    if (res != CURLE_OK) {
-        flg = 1;
+
+        if (res != CURLE_OK || !strncmp(data_s->token, "unauth", 6)) {
+            flg = 1;
+        }
+
+        if (flg == 0) {
+            printf("\n<< GET TOKEN SUCCESS >>\n");
+        }
+        curl_easy_cleanup(curl);
     }
 
-    if (flg == 0) {
-        printf("\n<< GET TOKEN SUCCESS >>\n");
-    }
     return flg;
 }
 
