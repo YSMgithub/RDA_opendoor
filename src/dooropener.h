@@ -1,5 +1,11 @@
+
 #ifndef SRC_DOOROPENER_H_
 #define SRC_DOOROPENER_H_
+
+#include <curl/curl.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #define MAX_NAME_LENGTHS 160
 #define MAX_TOKEN_LENGTHS 800

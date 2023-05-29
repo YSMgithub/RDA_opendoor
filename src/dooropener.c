@@ -1,7 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <curl/curl.h>
-#include <string.h>
+
 #include "dooropener.h"
 
 int main(int argc, char *argv[]) {
