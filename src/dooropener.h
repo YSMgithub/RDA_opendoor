@@ -14,6 +14,7 @@ typedef struct flags_s {
     int dataChgFlg;
     int doorOpen;
     int getOrPost;
+    int whileCounter;
 } flags_t;
 
 typedef struct data_s {

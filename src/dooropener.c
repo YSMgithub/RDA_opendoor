@@ -8,16 +8,17 @@ int main(int argc, char *argv[]) {
     readFromFile(&data_s);
     dataReader(&data_s);
     while (sendPostFunc(&data_s)) {
+		printf("\n<<%d>>\n", data_s.flags.whileCounter);
         if (gettokenfunc(&data_s)) {
             printf("\nAuth failed\n");
             data_s.user[0] = '\0';
             data_s.password[0] = '\0';
             dataReader(&data_s);
         }
-        if (data_s.flags.doorOpen == 4) {
+        if (data_s.flags.whileCounter == 3) {
             break;
         }
-        data_s.flags.doorOpen++;
+        data_s.flags.whileCounter++;
     }
     if (!data_s.flags.doorOpen) writeToFile(&data_s);
     memFree(&data_s);
@@ -69,6 +70,7 @@ void initStruct(data_t *data_s) {
     data_s->flags.dataChgFlg = 0;
     data_s->flags.doorOpen = 1;
     data_s->flags.getOrPost = 0;
+	data_s->flags.whileCounter = 0;
 }
 
 void dataReader(data_t *data_s) {
@@ -174,8 +176,10 @@ int sendPostFunc(data_t *data_s) {
     }
 
     if (!strncmp(data_s->chunk, "RDA", 3)) {
-        printf("<< Wrong RDA ID >>");
+        printf("\n<< Wrong RDA ID >>\n");
         data_s->rdaID[0] = '\0';
+		dataReader(data_s);
+		flg = 1;
     }
 
     data_s->flags.doorOpen = flg;
