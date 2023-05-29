@@ -10,16 +10,20 @@ int main(int argc, char *argv[]) {
     getArgs (argc, argv, &data_s);
     readFromFile (&data_s);
     dataReader(&data_s);
-
-    printf("\n token = %s\n", data_s.token);
-    printf("\n user = %s\n", data_s.user);
-    printf("\n password = %s\n", data_s.password);
-    printf("\n rdaID = %s\n", data_s.rdaID);
-    gettokenfunc(&data_s);
-    writeToFile(&data_s);
-    sendPostFunc(&data_s);
-
-    
+    while (sendPostFunc(&data_s)) {
+      if (gettokenfunc(&data_s)) {
+        printf("\nAuth failed\n");
+        data_s.user[0] = '\0';
+        data_s.password[0] = '\0';
+        dataReader(&data_s);
+      }
+      if (data_s.flags.doorOpen == 4) {
+        break;
+      }
+      data_s.flags.doorOpen++;
+    }
+    if(!data_s.flags.doorOpen) writeToFile(&data_s);
+    memFree(&data_s);
     return 0;
 }
 
@@ -55,6 +59,7 @@ void initStruct(data_t *data_s) {
   data_s->user = malloc(MAX_NAME_LENGTHS);
   data_s->password = malloc(MAX_NAME_LENGTHS);
   data_s->token = malloc(MAX_TOKEN_LENGTHS);
+  data_s->chunk = malloc(MAX_TOKEN_LENGTHS);
   if (data_s->rdaID == NULL || data_s->rdaID == NULL || data_s->rdaID == NULL || data_s->rdaID == NULL) {
     fprintf(stderr, "malloc() failed\n");
     exit(EXIT_FAILURE);
@@ -63,7 +68,10 @@ void initStruct(data_t *data_s) {
   data_s->user[0] = '\0';
   data_s->password[0] = '\0';
   data_s->token[0] = '\0';
+  data_s->chunk[0] = '\0';
   data_s->flags.dataChgFlg = 0;
+  data_s->flags.doorOpen = 1;
+  data_s->flags.getOrPost = 0;
 
 }
 
@@ -86,32 +94,39 @@ void dataReader(data_t *data_s) {
   data_s->flags.dataChgFlg = 1;
 }
 
-int gettokenfunc(data_t *data_s) {
+  int gettokenfunc(data_t *data_s) {
+  data_s->flags.getOrPost = 1;
+  int flg = 0;
+  CURL *curl;
+  CURLcode res;
+  curl = curl_easy_init();
+  if(curl) {
+    char data[512] = "grant_type=password&client_id=machine&username=";
+    strcat(data, data_s->user);
+    strcat(data, "&password=");
+    strcat(data, data_s->password);
+    curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "POST");
+    curl_easy_setopt(curl, CURLOPT_URL, "https://rdba.rosdomofon.com/authserver-service/oauth/token");
+    curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+    curl_easy_setopt(curl, CURLOPT_DEFAULT_PROTOCOL, "https");
+    struct curl_slist *headers = NULL;
+    headers = curl_slist_append(headers, "Content-Type: application/x-www-form-urlencoded");
+    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writefunc);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, data_s);
+    
+    res = curl_easy_perform(curl);
+  }
+  curl_easy_cleanup(curl);
+      if (res != CURLE_OK) {
+          flg = 1;
+      }
 
-CURL *curl;
-CURLcode res;
-curl = curl_easy_init();
-if(curl) {
-  char data[512] = "grant_type=password&client_id=machine&username=";
-  strcat(data, data_s->user);
-  strcat(data, "&password=");
-  strcat(data, data_s->password);
-  curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "POST");
-  curl_easy_setopt(curl, CURLOPT_URL, "https://rdba.rosdomofon.com/authserver-service/oauth/token");
-  curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
-  curl_easy_setopt(curl, CURLOPT_DEFAULT_PROTOCOL, "https");
-  struct curl_slist *headers = NULL;
-  headers = curl_slist_append(headers, "Content-Type: application/x-www-form-urlencoded");
-  curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
-  curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data);
-  curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writefunc);
-  curl_easy_setopt(curl, CURLOPT_WRITEDATA, data_s);
-  
-  res = curl_easy_perform(curl);
-}
-curl_easy_cleanup(curl);
-
-    return 0;
+      if (flg == 0) {
+        printf("\n<< GET TOKEN SUCCESS >>\n");
+      }
+      return flg;
 }
 
 size_t writefunc(void *ptr, size_t size, size_t nmemb, data_t *data_s) {
@@ -122,18 +137,17 @@ size_t writefunc(void *ptr, size_t size, size_t nmemb, data_t *data_s) {
    {
       istr = strtok (NULL, sep);
    }
-    int sizeISt = 0;
-    for (int i = 0;istr[i] != '\0'; i++) {
-        sizeISt++;
-    }
-
-
-  memcpy(data_s->token, istr, strlen(istr));
+  if (data_s->flags.getOrPost == 1) {
+   memcpy(data_s->token, istr, strlen(istr));
+  } else if (data_s->flags.getOrPost == 2) {
+    memcpy(data_s->chunk, istr, strlen(istr));
+  }
   return size*nmemb;
 }
 
-void sendPostFunc (data_t *data_s) {
-
+int sendPostFunc (data_t *data_s) {
+    data_s->flags.getOrPost = 2;
+    int flg = 0;
     CURL *curl;
     CURLcode res;
     char auth[453] = "Authorization: Bearer ";
@@ -142,18 +156,37 @@ void sendPostFunc (data_t *data_s) {
     char url[456] = "https://rdba.rosdomofon.com/rdas-service/api/v1/rdas/";
     strcat(url, data_s->rdaID);
     strcat(url, "/activate_key");
-        curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "POST");
-        curl_easy_setopt(curl, CURLOPT_URL, url);
-        curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
-        curl_easy_setopt(curl, CURLOPT_DEFAULT_PROTOCOL, "https");
-        struct curl_slist *headers = NULL;
-        headers = curl_slist_append(headers, "Content-Type: application/json");
-        headers = curl_slist_append(headers, auth);
-        curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
-        const char *data = "{\r\n    \"rele\": 3\r\n}";
-        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data);
-        res = curl_easy_perform(curl);
+    curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "POST");
+    curl_easy_setopt(curl, CURLOPT_URL, url);
+    curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+    curl_easy_setopt(curl, CURLOPT_DEFAULT_PROTOCOL, "https");
+    struct curl_slist *headers = NULL;
+    headers = curl_slist_append(headers, "Content-Type: application/json");
+    headers = curl_slist_append(headers, auth);
+    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+    const char *data = "{\r\n    \"rele\": 3\r\n}";
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writefunc);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, data_s);
+    res = curl_easy_perform(curl);
+
+    if (res != CURLE_OK || !strncmp(data_s->chunk, "invalid", 7)) {
+        flg = 1;
+    }
+
+    if(!strncmp(data_s->chunk, "RDA", 3)) {
+      printf("<< Wrong RDA ID >>");
+      data_s->rdaID[0] = '\0';
+    }
+
+
+    data_s->flags.doorOpen = flg;
+    if (!flg) {
+      printf("\n<< DOOR OPEN >>\n");
+    }
     curl_easy_cleanup(curl);
+    
+    return flg;
 }
 
 int writeToFile (data_t *data_s) {
@@ -208,4 +241,27 @@ void readFromFile (data_t *data_s) {
 
     // закрыть файл
     fclose(file);
+}
+
+void memFree (data_t *data_s) {
+      if (data_s->token != NULL) {
+        free(data_s->token);
+        data_s->token = NULL;
+    }
+      if (data_s->user != NULL) {
+        free(data_s->user);
+        data_s->user = NULL;
+    }
+      if (data_s->password != NULL) {
+        free(data_s->password);
+        data_s->password = NULL;
+    }
+          if (data_s->rdaID != NULL) {
+        free(data_s->rdaID);
+        data_s->rdaID = NULL;
+    }
+        if (data_s->chunk != NULL) {
+        free(data_s->chunk);
+        data_s->chunk = NULL;
+    }
 }

@@ -6,6 +6,8 @@
 
 typedef struct flags_s {
     int dataChgFlg;
+    int doorOpen;
+    int getOrPost;
 } flags_t;
 
 typedef struct data_s {
@@ -13,6 +15,7 @@ typedef struct data_s {
     char * user;
     char * password;
     char * token;
+    char * chunk;
     flags_t flags;
 } data_t;
 
@@ -28,12 +31,14 @@ int gettokenfunc(data_t * data_s);
 
 size_t writefunc(void *ptr, size_t size, size_t nmemb, data_t *data_s);
 
-void sendPostFunc (data_t *data_s);
+int sendPostFunc (data_t *data_s);
 
 int writeToFile (data_t *data_s);
 
 void readFromFile (data_t *data_s);
 
 int getArgs (int argc, char *argv[], data_t *data_s);
+
+void memFree (data_t *data_s);
 
 #endif  // SRC_DOOROPENER_H_"
