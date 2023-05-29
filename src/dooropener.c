@@ -8,15 +8,15 @@ int main(int argc, char *argv[]) {
     data_t data_s;
     initStruct(&data_s);
     getArgs (argc, argv, &data_s);
-    writeToFile(&data_s);
     readFromFile (&data_s);
-    //dataReader(&data_s);
-    //readFromFile (&data_s);
+    dataReader(&data_s);
+
     printf("\n token = %s\n", data_s.token);
     printf("\n user = %s\n", data_s.user);
     printf("\n password = %s\n", data_s.password);
+    printf("\n rdaID = %s\n", data_s.rdaID);
     gettokenfunc(&data_s);
-    //writeToFile(&data_s);
+    writeToFile(&data_s);
     sendPostFunc(&data_s);
 
     
@@ -26,6 +26,7 @@ int main(int argc, char *argv[]) {
 
 int getArgs (int argc, char *argv[], data_t *data_s) {
   if (argc > 0) {
+      data_s->flags.dataChgFlg = 1;
       for (int i = 1; i < argc; i++) {
       if (strcmp(argv[i], "-u") == 0) {
           // Аргумент -u содержит имя пользователя
@@ -41,6 +42,7 @@ int getArgs (int argc, char *argv[], data_t *data_s) {
           strcpy(data_s->rdaID, argv[i]);
       } else {
         printf("Not valid args");
+        data_s->flags.dataChgFlg = 0;
         return 1;
       }
     }
@@ -61,20 +63,27 @@ void initStruct(data_t *data_s) {
   data_s->user[0] = '\0';
   data_s->password[0] = '\0';
   data_s->token[0] = '\0';
+  data_s->flags.dataChgFlg = 0;
 
 }
 
 
 void dataReader(data_t *data_s) {
+  if (data_s->rdaID[0] == '\0') {
+    printf("Enter RDA ID: ");
+    scanf("%s", data_s->rdaID);
+  }
 
-  printf("Enter RDA ID: ");
-  scanf("%s", data_s->rdaID);
-  
-  printf("Enter username: ");
-  scanf("%s", data_s->user);
-  
-  printf("Enter password: ");
-  scanf("%s", data_s->password);
+  if (data_s->user[0] == '\0') {
+    printf("Enter username: ");
+    scanf("%s", data_s->user);
+  }
+
+  if (data_s->password[0] == '\0') {
+    printf("Enter password: ");
+    scanf("%s", data_s->password);
+  }
+  data_s->flags.dataChgFlg = 1;
 }
 
 int gettokenfunc(data_t *data_s) {
@@ -130,8 +139,11 @@ void sendPostFunc (data_t *data_s) {
     char auth[453] = "Authorization: Bearer ";
     strcat(auth, data_s->token);
     curl = curl_easy_init();
+    char url[456] = "https://rdba.rosdomofon.com/rdas-service/api/v1/rdas/";
+    strcat(url, data_s->rdaID);
+    strcat(url, "/activate_key");
         curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "POST");
-        curl_easy_setopt(curl, CURLOPT_URL, "https://rdba.rosdomofon.com/rdas-service/api/v1/rdas/b827eb82eb81/activate_key");
+        curl_easy_setopt(curl, CURLOPT_URL, url);
         curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
         curl_easy_setopt(curl, CURLOPT_DEFAULT_PROTOCOL, "https");
         struct curl_slist *headers = NULL;
@@ -145,35 +157,17 @@ void sendPostFunc (data_t *data_s) {
 }
 
 int writeToFile (data_t *data_s) {
-  FILE *f = fopen("config.txt", "r+");
-  if (f == NULL) {
+  FILE *file = fopen("config.txt", "w");
+  if (file == NULL) {
       printf("Failed to open file for writing.\n");
       return 1;
   }
-  char buffer[MAX_TOKEN_LENGTHS];
-  char key[100];
-  char value[MAX_TOKEN_LENGTHS];
-    while (fgets(buffer, MAX_TOKEN_LENGTHS, f) != NULL) {
-        // Извлекаем ключ и значение из строки
-        sscanf(buffer, "%[^=]=%s", key, value);
-        printf("\nkey = %s, value = %s\n", key, value);
-        // Сравниваем ключ со значениями token, user, password и id и записываем новые значения из структуры
-        if (strcmp(key, "token") == 0) {
-            strcpy(data_s->token, value);
-            fprintf(f, "token=%s\n", data_s->token);
-        } else if (strcmp(key, "user") == 0) {
-            strcpy(data_s->user, value);
-            fprintf(f, "user=%s\n", data_s->user);
-        } else if (strcmp(key, "password") == 0) {
-            strcpy(data_s->password, value);
-            fprintf(f, "password=%s\n", data_s->password);
-        } else if (strcmp(key, "id") == 0) {
-            strcpy(data_s->rdaID, value);
-            fprintf(f, "id=%s\n", data_s->rdaID);
-        }
-    }
+    fprintf(file, "%s\n", data_s->token);
+    fprintf(file, "%s\n", data_s->user);
+    fprintf(file, "%s\n", data_s->password);
+    fprintf(file, "%s\n", data_s->rdaID);
 
-    fclose(f);
+    fclose(file);
   
   return 0;
 }
@@ -186,11 +180,32 @@ void readFromFile (data_t *data_s) {
         printf("Ошибка открытия файла!");
         exit(1);
     }
+    char buffer[MAX_TOKEN_LENGTHS];
+    
+    fgets(buffer, MAX_TOKEN_LENGTHS, file);
+    if (data_s->token[0] == '\0') {
+      strcpy(data_s->token, buffer);
+      data_s->token[strlen(data_s->token) - 1] = '\0';
+    }
+    
+    fgets(buffer, MAX_TOKEN_LENGTHS, file);
+    if (data_s->user[0] == '\0') {
+      strcpy(data_s->user, buffer);
+      data_s->user[strlen(data_s->user) - 1] = '\0';
+    }
 
-    fgets(data_s->token, MAX_TOKEN_LENGTHS, file);
-    fgets(data_s->user, MAX_NAME_LENGTHS, file);
-    fgets(data_s->password, MAX_NAME_LENGTHS, file);
-    fgets(data_s->rdaID, MAX_NAME_LENGTHS, file);
+    fgets(buffer, MAX_TOKEN_LENGTHS, file);
+    if (data_s->password[0] == '\0') {
+      strcpy(data_s->password, buffer);
+      data_s->password[strlen(data_s->password) - 1] = '\0';
+    }
+
+    fgets(buffer, MAX_TOKEN_LENGTHS, file);
+    if (data_s->rdaID[0] == '\0') {
+      strcpy(data_s->rdaID, buffer);
+      data_s->rdaID[strlen(data_s->rdaID) - 1] = '\0';
+    }
+
     // закрыть файл
     fclose(file);
 }

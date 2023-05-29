@@ -5,7 +5,7 @@
 #define MAX_TOKEN_LENGTHS 800
 
 typedef struct flags_s {
-    int flag;
+    int dataChgFlg;
 } flags_t;
 
 typedef struct data_s {
