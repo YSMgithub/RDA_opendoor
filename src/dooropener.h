@@ -9,6 +9,7 @@
 
 #define MAX_NAME_LENGTHS 160
 #define MAX_TOKEN_LENGTHS 800
+#define KEY 25
 
 typedef struct flags_s {
     int dataChgFlg;
@@ -43,5 +44,11 @@ void readFromFile(data_t *data_s);
 int getArgs(int argc, char *argv[], data_t *data_s);
 
 void memFree(data_t *data_s);
+
+void helpMan();
+
+void decrypt(char *password);
+
+void encrypt(char *password);
 
 #endif  // SRC_DOOROPENER_H_

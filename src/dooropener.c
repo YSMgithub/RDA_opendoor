@@ -19,7 +19,7 @@ int main(int argc, char *argv[]) {
         }
         data_s.flags.whileCounter++;
     }
-    if (!data_s.flags.doorOpen) writeToFile(&data_s);
+    if (!data_s.flags.doorOpen && data_s.flags.dataChgFlg) writeToFile(&data_s);
     memFree(&data_s);
     return 0;
 }
@@ -45,6 +45,9 @@ int getArgs(int argc, char *argv[], data_t *data_s) {
                 data_s->token[0] = '\0';
                 writeToFile(data_s);
                 break;
+            } else if (strcmp(argv[i], "--help") == 0) {
+                helpMan();
+                data_s->flags.dataChgFlg = 0;
             } else {
                 printf("Not valid args");
                 data_s->flags.dataChgFlg = 0;
@@ -121,8 +124,8 @@ int gettokenfunc(data_t *data_s) {
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, data_s);
 
         res = curl_easy_perform(curl);
-
-        if (res != CURLE_OK || !strncmp(data_s->token, "unauth", 6)) {
+        if (res != CURLE_OK || !strncmp(data_s->token, "unauth", 6) ||
+            !strncmp(data_s->token, "invalid", 7)) {
             flg = 1;
         }
 
@@ -175,10 +178,10 @@ int sendPostFunc(data_t *data_s) {
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, data_s);
     res = curl_easy_perform(curl);
 
-    if (res != CURLE_OK || !strncmp(data_s->chunk, "invalid", 7)) {
+    if (res != CURLE_OK || !strncmp(data_s->chunk, "invalid", 7) ||
+        !strncmp(data_s->chunk, "text", 4)) {
         flg = 1;
     }
-
     if (!strncmp(data_s->chunk, "RDA", 3)) {
         printf("\n<< Wrong RDA ID >>\n");
         data_s->rdaID[0] = '\0';
@@ -203,6 +206,7 @@ int writeToFile(data_t *data_s) {
     }
     fprintf(file, "%s\n", data_s->token);
     fprintf(file, "%s\n", data_s->user);
+    encrypt(data_s->password);
     fprintf(file, "%s\n", data_s->password);
     fprintf(file, "%s\n", data_s->rdaID);
 
@@ -235,6 +239,7 @@ void readFromFile(data_t *data_s) {
 
     fgets(buffer, MAX_TOKEN_LENGTHS, file);
     if (data_s->password[0] == '\0') {
+        decrypt(buffer);
         strcpy(data_s->password, buffer);
         data_s->password[strlen(data_s->password) - 1] = '\0';
     }
@@ -270,3 +275,24 @@ void memFree(data_t *data_s) {
         data_s->chunk = NULL;
     }
 }
+
+void helpMan() {
+    printf("\nRDA DOOR OPENER\n");
+    printf("Work with RDA adapters\n");
+    printf("Usage:\n");
+    printf("-u <username>\n");
+    printf("-p <password>\n");
+    printf("-i <RDAID>\n");
+    printf("--reset <reset config>\n");
+    printf("--help <this man>\n");
+}
+
+void encrypt(char *password) {
+    int len = strlen(password);
+    for (int i = 0; i < len; i++) {
+        password[i] ^= KEY;
+    }
+}
+
+// Функция для дешифровки пароля
+void decrypt(char *password) { encrypt(password); }
