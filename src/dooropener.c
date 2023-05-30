@@ -8,7 +8,6 @@ int main(int argc, char *argv[]) {
     readFromFile(&data_s);
     dataReader(&data_s);
     while (sendPostFunc(&data_s)) {
-		printf("\n<<%d>>\n", data_s.flags.whileCounter);
         if (gettokenfunc(&data_s)) {
             printf("\nAuth failed\n");
             data_s.user[0] = '\0';
@@ -30,17 +29,22 @@ int getArgs(int argc, char *argv[], data_t *data_s) {
         data_s->flags.dataChgFlg = 1;
         for (int i = 1; i < argc; i++) {
             if (strcmp(argv[i], "-u") == 0) {
-                // Аргумент -u содержит имя пользователя
                 i++;
                 strcpy(data_s->user, argv[i]);
             } else if (strcmp(argv[i], "-p") == 0) {
-                // Аргумент -p содержит пароль
                 i++;
                 strcpy(data_s->password, argv[i]);
             } else if (strcmp(argv[i], "-i") == 0) {
-                // Аргумент -i содержит ID (целое число)
                 i++;
                 strcpy(data_s->rdaID, argv[i]);
+            } else if (strcmp(argv[i], "--reset") == 0) {
+                i++;
+                data_s->rdaID[0] = '\0';
+                data_s->user[0] = '\0';
+                data_s->password[0] = '\0';
+                data_s->token[0] = '\0';
+                writeToFile(data_s);
+                break;
             } else {
                 printf("Not valid args");
                 data_s->flags.dataChgFlg = 0;
@@ -70,7 +74,7 @@ void initStruct(data_t *data_s) {
     data_s->flags.dataChgFlg = 0;
     data_s->flags.doorOpen = 1;
     data_s->flags.getOrPost = 0;
-	data_s->flags.whileCounter = 0;
+    data_s->flags.whileCounter = 0;
 }
 
 void dataReader(data_t *data_s) {
@@ -178,8 +182,8 @@ int sendPostFunc(data_t *data_s) {
     if (!strncmp(data_s->chunk, "RDA", 3)) {
         printf("\n<< Wrong RDA ID >>\n");
         data_s->rdaID[0] = '\0';
-		dataReader(data_s);
-		flg = 1;
+        dataReader(data_s);
+        flg = 1;
     }
 
     data_s->flags.doorOpen = flg;
@@ -212,7 +216,7 @@ void readFromFile(data_t *data_s) {
     char line[MAX_TOKEN_LENGTHS];
     file = fopen("config.txt", "r");
     if (file == NULL) {
-        printf("Ошибка открытия файла!");
+        printf("Failed to open file");
         exit(1);
     }
     char buffer[MAX_TOKEN_LENGTHS];
@@ -241,7 +245,6 @@ void readFromFile(data_t *data_s) {
         data_s->rdaID[strlen(data_s->rdaID) - 1] = '\0';
     }
 
-    // закрыть файл
     fclose(file);
 }
 
