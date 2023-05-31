@@ -8,7 +8,7 @@ int main(int argc, char *argv[]) {
     readFromFile(&data_s);
     dataReader(&data_s);
     while (sendPostFunc(&data_s)) {
-        if (gettokenfunc(&data_s)) {
+        if (gettokenfunc(&data_s) == 2) {
             printf("\nAuth failed\n");
             data_s.user[0] = '\0';
             data_s.password[0] = '\0';
@@ -126,10 +126,16 @@ int gettokenfunc(data_t *data_s) {
         res = curl_easy_perform(curl);
         if (res != CURLE_OK || !strncmp(data_s->token, "unauth", 6) ||
             !strncmp(data_s->token, "invalid", 7)) {
+            fprintf(stderr, "ERROR: %s\n", curl_easy_strerror(res));
             flg = 1;
         }
 
-        if (flg == 0) {
+        if (!strncmp(data_s->token, "unauth", 6) ||
+            !strncmp(data_s->token, "invalid", 7)) {
+            flg = 2;
+        }
+
+        if (flg == 0 && res != CURLE_COULDNT_RESOLVE_HOST) {
             printf("\n<< GET TOKEN SUCCESS >>\n");
         }
         curl_easy_cleanup(curl);
@@ -178,21 +184,23 @@ int sendPostFunc(data_t *data_s) {
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, data_s);
     res = curl_easy_perform(curl);
 
-    if (res != CURLE_OK || !strncmp(data_s->chunk, "invalid", 7) ||
-        !strncmp(data_s->chunk, "text", 4)) {
+    if (res != CURLE_OK) {
+        fprintf(stderr, "ERROR: %s\n", curl_easy_strerror(res));
         flg = 1;
-    }
-    if (!strncmp(data_s->chunk, "RDA", 3)) {
+    } else if (!strncmp(data_s->chunk, "invalid", 7) ||
+               !strncmp(data_s->chunk, "text", 4)) {
+        flg = 1;
+    } else if (!strncmp(data_s->chunk, "RDA", 3)) {
         printf("\n<< Wrong RDA ID >>\n");
         data_s->rdaID[0] = '\0';
         dataReader(data_s);
         flg = 1;
+    } else {
+        printf("\n<< DOOR OPEN >>\n");
     }
 
     data_s->flags.doorOpen = flg;
-    if (!flg) {
-        printf("\n<< DOOR OPEN >>\n");
-    }
+
     curl_easy_cleanup(curl);
 
     return flg;
@@ -294,5 +302,4 @@ void encrypt(char *password) {
     }
 }
 
-// Функция для дешифровки пароля
 void decrypt(char *password) { encrypt(password); }
