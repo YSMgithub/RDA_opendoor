@@ -21,6 +21,7 @@ int main(int argc, char *argv[]) {
     }
     if (!data_s.flags.doorOpen && data_s.flags.dataChgFlg) writeToFile(&data_s);
     memFree(&data_s);
+    Sleep(5000);
     return 0;
 }
 

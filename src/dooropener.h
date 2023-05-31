@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #define MAX_NAME_LENGTHS 160
 #define MAX_TOKEN_LENGTHS 800
@@ -27,8 +28,10 @@ typedef struct data_s {
     flags_t flags;
 } data_t;
 
+// функция инициализации пременных и выделения памяти.
 void initStruct(data_t *data_s);
 
+// Функция получения пользовательских данных из консоли.
 void dataReader(data_t *data_s);
 
 int gettokenfunc(data_t *data_s);
