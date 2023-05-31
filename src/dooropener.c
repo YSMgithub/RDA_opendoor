@@ -229,8 +229,9 @@ void readFromFile(data_t *data_s) {
     char line[MAX_TOKEN_LENGTHS];
     file = fopen("config.txt", "r");
     if (file == NULL) {
-        printf("Failed to open file");
-        exit(1);
+        printf("\nFailed to open file, creating new file config.txt\n");
+        file = fopen("config.txt", "w");
+        fprintf(file, "\n\n\n\n");
     }
     char buffer[MAX_TOKEN_LENGTHS];
 
